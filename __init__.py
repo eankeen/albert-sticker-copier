@@ -1,23 +1,33 @@
-# -*- coding: utf-8 -*-
-
 """Copy a file from a folder
 
 Synopsis: <trigger> [duration [break duration [long break duration [count]]]]"""
 
 import albert
+import json
 import os
 
-__title__ = "Sticker Copier"
-__version__ = "0.1.0"
-__triggers__ = "st "
+__title__ = "Sticker Searcher"
+__version__ = "0.1.1"
+__triggers__ = "ss "
 __authors__ = "Edwin Kofler"
 
-stickersDir = os.path.join(os.environ['HOME'], 'Pics/telegram-stickers')
 
-def doCopy(file: str):
+def getCfg() -> str:
+    file = os.path.join("albert-sticker-searcher", "config.json")
+    if os.getenv("XDG_CONFIG_HOME"):
+        return os.path.join(os.getenv("XDG_CONFIG_HOME"), file)
+    return os.path.join(os.getenv("HOME"), ".config", file)
+
+def readCfg() -> object:
+    with open(getCfg()) as f:
+        return json.load(f)
+
+def doCopy(file: str) -> None:
     os.system('xclip -selection clipboard -t image/png -i {}'.format(file))
 
-def handleQuery(query):
+cfg = readCfg()
+stickersDir = os.path.expandvars(os.path.expanduser(cfg.stickerDir))
+def handleQuery(query) -> object:
     if not query.isTriggered:
         return
 
@@ -29,11 +39,11 @@ def handleQuery(query):
             continue
 
         for img in os.listdir(os.path.join(stickersDir, stickerDir)):
-            def d():
+            def fn():
                 icon=os.path.join(stickersDir, stickerDir, img)
                 albert.info(icon)
                 item = albert.Item(
-                    id=__title__,6A4F-868A
+                    id=__title__,
                     text=stickerDir + ': ' + img,
                     subtext=stickerDir,
                     icon=icon,
@@ -43,6 +53,6 @@ def handleQuery(query):
                 )
 
                 results.append(item)
-            d()
+            fn()
 
     return results
